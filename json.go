@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"github.com/mekramy/gocast"
 	"github.com/tidwall/gjson"
@@ -14,9 +15,13 @@ type jsonDriver struct {
 	raw   string
 	files []string
 	data  map[string]any
+	mutex sync.RWMutex
 }
 
 func (driver *jsonDriver) Load() error {
+	driver.mutex.Lock()
+	defer driver.mutex.Unlock()
+
 	if driver.data == nil {
 		driver.data = make(map[string]any)
 	}
@@ -57,10 +62,16 @@ func (driver *jsonDriver) Load() error {
 }
 
 func (driver *jsonDriver) Set(key string, value any) {
+	driver.mutex.Lock()
+	defer driver.mutex.Unlock()
+
 	driver.data[key] = value
 }
 
 func (driver *jsonDriver) Get(key string) any {
+	driver.mutex.RLock()
+	defer driver.mutex.RUnlock()
+
 	if v, ok := driver.data[key]; ok {
 		return v
 	}
@@ -73,11 +84,14 @@ func (driver *jsonDriver) Get(key string) any {
 }
 
 func (driver *jsonDriver) Exists(key string) bool {
+	driver.mutex.RLock()
+	defer driver.mutex.RUnlock()
+
 	if _, ok := driver.data[key]; ok {
 		return true
 	}
 
-	return false
+	return gjson.Get(driver.raw, key).Exists()
 }
 
 func (driver *jsonDriver) Cast(key string) gocast.Caster {
