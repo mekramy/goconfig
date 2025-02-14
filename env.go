@@ -14,29 +14,29 @@ type envDriver struct {
 	mutex sync.RWMutex
 }
 
-func (driver *envDriver) Load() error {
-	driver.mutex.Lock()
-	defer driver.mutex.Unlock()
+func (e *envDriver) Load() error {
+	e.mutex.Lock()
+	defer e.mutex.Unlock()
 
-	if driver.data == nil {
-		driver.data = make(map[string]any)
+	if e.data == nil {
+		e.data = make(map[string]any)
 	}
 
-	return godotenv.Overload(driver.files...)
+	return godotenv.Overload(e.files...)
 }
 
-func (driver *envDriver) Set(key string, value any) {
-	driver.mutex.Lock()
-	defer driver.mutex.Unlock()
+func (e *envDriver) Set(key string, value any) {
+	e.mutex.Lock()
+	defer e.mutex.Unlock()
 
-	driver.data[key] = value
+	e.data[key] = value
 }
 
-func (driver *envDriver) Get(key string) any {
-	driver.mutex.RLock()
-	defer driver.mutex.RUnlock()
+func (e *envDriver) Get(key string) any {
+	e.mutex.RLock()
+	defer e.mutex.RUnlock()
 
-	if v, ok := driver.data[key]; ok {
+	if v, ok := e.data[key]; ok {
 		return v
 	}
 
@@ -47,11 +47,11 @@ func (driver *envDriver) Get(key string) any {
 	return nil
 }
 
-func (driver *envDriver) Exists(key string) bool {
-	driver.mutex.RLock()
-	defer driver.mutex.RUnlock()
+func (e *envDriver) Exists(key string) bool {
+	e.mutex.RLock()
+	defer e.mutex.RUnlock()
 
-	if _, ok := driver.data[key]; ok {
+	if _, ok := e.data[key]; ok {
 		return true
 	}
 
@@ -62,6 +62,6 @@ func (driver *envDriver) Exists(key string) bool {
 	return false
 }
 
-func (driver *envDriver) Cast(key string) gocast.Caster {
-	return gocast.NewCaster(driver.Get(key))
+func (e *envDriver) Cast(key string) gocast.Caster {
+	return gocast.NewCaster(e.Get(key))
 }

@@ -18,17 +18,17 @@ type jsonDriver struct {
 	mutex sync.RWMutex
 }
 
-func (driver *jsonDriver) Load() error {
-	driver.mutex.Lock()
-	defer driver.mutex.Unlock()
+func (j *jsonDriver) Load() error {
+	j.mutex.Lock()
+	defer j.mutex.Unlock()
 
-	if driver.data == nil {
-		driver.data = make(map[string]any)
+	if j.data == nil {
+		j.data = make(map[string]any)
 	}
 
 	// Read json files
 	contents := make([]string, 0)
-	for _, file := range driver.files {
+	for _, file := range j.files {
 		bytes, err := os.ReadFile(file)
 		if err != nil {
 			return err
@@ -42,7 +42,7 @@ func (driver *jsonDriver) Load() error {
 		fileName := filepath.Base(file)
 		fileName = strings.TrimSuffix(fileName, filepath.Ext(fileName))
 
-		if len(driver.files) > 1 {
+		if len(j.files) > 1 {
 			contents = append(contents, `"`+fileName+`":`+content)
 		} else {
 			contents = append(contents, content)
@@ -50,50 +50,50 @@ func (driver *jsonDriver) Load() error {
 	}
 
 	// Generate big config file
-	if len(driver.files) > 1 {
-		driver.raw = "{" + strings.Join(contents, ",") + "}"
-	} else if len(driver.files) > 0 {
-		driver.raw = contents[0]
+	if len(j.files) > 1 {
+		j.raw = "{" + strings.Join(contents, ",") + "}"
+	} else if len(j.files) > 0 {
+		j.raw = contents[0]
 	} else {
-		driver.raw = "{}"
+		j.raw = "{}"
 	}
 
 	return nil
 }
 
-func (driver *jsonDriver) Set(key string, value any) {
-	driver.mutex.Lock()
-	defer driver.mutex.Unlock()
+func (j *jsonDriver) Set(key string, value any) {
+	j.mutex.Lock()
+	defer j.mutex.Unlock()
 
-	driver.data[key] = value
+	j.data[key] = value
 }
 
-func (driver *jsonDriver) Get(key string) any {
-	driver.mutex.RLock()
-	defer driver.mutex.RUnlock()
+func (j *jsonDriver) Get(key string) any {
+	j.mutex.RLock()
+	defer j.mutex.RUnlock()
 
-	if v, ok := driver.data[key]; ok {
+	if v, ok := j.data[key]; ok {
 		return v
 	}
 
-	if v := gjson.Get(driver.raw, key); v.Exists() {
+	if v := gjson.Get(j.raw, key); v.Exists() {
 		return v.Value()
 	}
 
 	return nil
 }
 
-func (driver *jsonDriver) Exists(key string) bool {
-	driver.mutex.RLock()
-	defer driver.mutex.RUnlock()
+func (j *jsonDriver) Exists(key string) bool {
+	j.mutex.RLock()
+	defer j.mutex.RUnlock()
 
-	if _, ok := driver.data[key]; ok {
+	if _, ok := j.data[key]; ok {
 		return true
 	}
 
-	return gjson.Get(driver.raw, key).Exists()
+	return gjson.Get(j.raw, key).Exists()
 }
 
-func (driver *jsonDriver) Cast(key string) gocast.Caster {
-	return gocast.NewCaster(driver.Get(key))
+func (j *jsonDriver) Cast(key string) gocast.Caster {
+	return gocast.NewCaster(j.Get(key))
 }

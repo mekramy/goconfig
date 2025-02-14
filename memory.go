@@ -11,45 +11,45 @@ type memoryDriver struct {
 	mutex sync.RWMutex
 }
 
-func (driver *memoryDriver) Load() error {
-	driver.mutex.Lock()
-	defer driver.mutex.Unlock()
+func (m *memoryDriver) Load() error {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
 
-	if driver.data == nil {
-		driver.data = make(map[string]any)
+	if m.data == nil {
+		m.data = make(map[string]any)
 	}
 	return nil
 }
 
-func (driver *memoryDriver) Set(key string, value any) {
-	driver.mutex.Lock()
-	defer driver.mutex.Unlock()
+func (m *memoryDriver) Set(key string, value any) {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
 
-	driver.data[key] = value
+	m.data[key] = value
 }
 
-func (driver *memoryDriver) Get(key string) any {
-	driver.mutex.RLock()
-	defer driver.mutex.RUnlock()
+func (m *memoryDriver) Get(key string) any {
+	m.mutex.RLock()
+	defer m.mutex.RUnlock()
 
-	if v, ok := driver.data[key]; ok {
+	if v, ok := m.data[key]; ok {
 		return v
 	}
 
 	return nil
 }
 
-func (driver *memoryDriver) Exists(key string) bool {
-	driver.mutex.RLock()
-	defer driver.mutex.RUnlock()
+func (m *memoryDriver) Exists(key string) bool {
+	m.mutex.RLock()
+	defer m.mutex.RUnlock()
 
-	if _, ok := driver.data[key]; ok {
+	if _, ok := m.data[key]; ok {
 		return true
 	}
 
 	return false
 }
 
-func (driver *memoryDriver) Cast(key string) gocast.Caster {
-	return gocast.NewCaster(driver.Get(key))
+func (m *memoryDriver) Cast(key string) gocast.Caster {
+	return gocast.NewCaster(m.Get(key))
 }
